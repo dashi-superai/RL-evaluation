@@ -53,7 +53,7 @@ async def math_main():
         print(f"Ground Truth : {truth_answer}")
         print('+' * 60)
         score = 0.0
-        resp = await llm_chat(prompt, 0.7)
+        resp = await llm_chat(INSTRUCTION_PROMPT + prompt, 0.7)
         data = resp.json()
         content = data["response"]
         content_answer = parse(f"\\boxed{{{content}}}", parsing_timeout=5)
