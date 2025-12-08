@@ -29,7 +29,7 @@ async def llm_chat(prompt, temperature):
         }
         
         response = requests.post(
-            "http://localhost:5000/chat",
+            "http://localhost:5001/chat",
             json=params
         )
 
