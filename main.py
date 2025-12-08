@@ -29,7 +29,7 @@ async def llm_chat(prompt, temperature):
         }
         
         response = requests.post(
-            "http://localhost:5001/chat",
+            "http://localhost:5000/chat",
             json=params
         )
 
@@ -37,20 +37,20 @@ async def llm_chat(prompt, temperature):
 
 
 async def math_main():
-    datasets = load_dataset("parquet", data_files="./datasets/train-00000-of-00159.parquet")['train']
+    datasets = load_dataset("PrimeIntellect/INTELLECT-3-RL", "math")['train']
     print(len(datasets))
 
     import time
     import random
     random.seed(int(time.time()))
 
-    for index in range(10):
+    for index in range(50):
         rand = random.randint(0, len(datasets))
         print(f"Processing data index : {rand}")
         
         data = datasets[rand]
 
-        prompt = data['prompt'][0]['content']
+        prompt = data['question']
 
         # print('+' * 60)
         # print(prompt)
@@ -59,11 +59,12 @@ async def math_main():
         # print('+' * 60)
         # print(datasets[rand]['completion'][0]['content'])
         
-        truth = datasets[rand]['completion'][0]['content']
+        truth = data['answer']
 
         print(truth)
         print('+' * 60)
-        print(f"Ground Truth : {parse(f"\\boxed{{{truth}}}", parsing_timeout=5)}")
+        truth_answer = parse(f"\\boxed{{{truth}}}", parsing_timeout=5)
+        print(f"Ground Truth : {truth_answer}")
         print('+' * 60)
         
         score = 0.0
@@ -72,7 +73,8 @@ async def math_main():
         data = resp.json()
         content = data["response"]
 
-        print(f"Model Answer : {parse(f"\\boxed{{{content}}}", parsing_timeout=5)}")
+        content_answer = parse(f"\\boxed{{{content}}}", parsing_timeout=5)
+        print(f"Model Answer : {content_answer}")
         print('<>' * 60)
 
         score = float(
