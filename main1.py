@@ -1,4 +1,5 @@
 from datasets import load_dataset
+from math_verify import parse, verify
 
 async def llm_chat(prompt, temperature):
         """Call LLM API with specified API key and optional seed"""
@@ -51,12 +52,18 @@ async def math_main():
 
         prompt = data['prompt'][0]['content']
 
-        print('+' * 60)
-        print(prompt)
-        print('+' * 60)
+        # print('+' * 60)
+        # print(prompt)
+        # print('+' * 60)
 
+        # print('+' * 60)
+        # print(datasets[rand]['completion'][0]['content'])
+        
+        truth = datasets[rand]['completion'][0]['content']
+
+        print(truth)
         print('+' * 60)
-        print(datasets[rand]['completion'][0]['content'])
+        print(f"Ground Truth : {parse(f"\\boxed{{{truth}}}", parsing_timeout=5)}")
         print('+' * 60)
         
         score = 0.0
@@ -65,20 +72,33 @@ async def math_main():
         data = resp.json()
         content = data["response"]
 
-        print(content)
+        print(f"Model Answer : {parse(f"\\boxed{{{content}}}", parsing_timeout=5)}")
         print('<>' * 60)
+
+        score = float(
+            verify(
+                parse(f"\\boxed{{{truth}}}", parsing_timeout=5),
+                parse(f"\\boxed{{{content}}}", parsing_timeout=5),
+                timeout_seconds=5,
+            )
+        )
+
+        print('|' * 60)
+        print(f"Score: {score}")
+        print('=' * 60)
         
         # content = "1007"
 
-        res = ""
-        with open(f'./log1/output-{index}.txt', 'w') as f:
-            res = datasets[rand]['completion'][0]['content']
-            res = '+' * 60
-            res = content
+        with open(f'./log/output-{index}.txt', 'w') as f:
+            res = ""
+            res += truth
+            res += '+' * 60
+            res += content
+            res += '+' * 60
+            res += f"Score : {score}"
 
             f.write(res)
 
-        # print(f"Score: {score}")
 
 if __name__ == "__main__":
     import asyncio
