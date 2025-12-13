@@ -150,15 +150,20 @@ class Actor:
         return result
     
     
-if __name__  == '__main__':
+async def main():
     actor = Actor()
-    import asyncio
     cnt = 0
-    for i in range(2000):
-        result = asyncio.run(actor.evaluate(task_id = i))
+    id = 8655
+    for i in range(id, id + 1000, 5):
+        result = await actor.evaluate(task_id = i)
         print(f"task id : {i} result: {result['score']}")
         if result['score']:
             cnt += 1
+    print(f"correct num: {cnt}")
+            
+if __name__  == '__main__':
+    import asyncio
+    asyncio.run(main())
             
     print(f"correct num: {cnt}")
         
