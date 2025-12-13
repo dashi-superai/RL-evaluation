@@ -53,7 +53,7 @@ class Actor:
 
         params = {
             "prompt": prompt,
-            "max_length": 10000,
+            "max_length": 1000,
             "temperature": temperature,
             "messages": [
                 {"role": "user", "content": prompt}
@@ -156,16 +156,18 @@ class Actor:
 
         return result
     
-    
-if __name__  == '__main__':
+async def main():
     actor = Actor()
-    import asyncio
     cnt = 0
-    id = 0
+    id = 100
     for i in range(id, id + 1000, 5):
-        result = asyncio.run(actor.evaluate(task_id = i))
+        result = await actor.evaluate(task_id = i)
         print(f"task id : {i} result: {result['score']}")
         if result['score']:
             cnt += 1
-            
     print(f"correct num: {cnt}")
+            
+if __name__  == '__main__':
+    import asyncio
+    asyncio.run(main())
+    
