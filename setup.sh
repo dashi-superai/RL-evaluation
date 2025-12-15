@@ -6,3 +6,5 @@ pip install uv
 uv pip install fastapi uvicorn transformers torch accelerate math_verify datasets openai
 cd affinetes
 uv pip install -e .
+chmod +x eval_cde.sh
+chmod +x eval_lgc.sh
