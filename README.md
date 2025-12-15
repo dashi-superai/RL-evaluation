@@ -5,14 +5,14 @@ chmod +x setup.sh
 
 source .venv/bin/activate
 
-### Math evaluation
+### 📐Math evaluation
 python eval_math.py
 
-### Science evaluation
+### 🔍Science evaluation
 python eval_science.py
 
-### Logic evaluation
+### 📋Logic evaluation
 ./eval_lgc.sh
 
-### Code evaluation
+### 🧑‍💻Code evaluation
 ./eval_cde.sh
