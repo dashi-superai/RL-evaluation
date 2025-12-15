@@ -4,6 +4,8 @@ chmod +x setup.sh
 ./setup.sh
 
 source .venv/bin/activate
+### 📡Run LLM Server
+python server.py --hug_url Sota26/Affine_M016 --local_dir model
 
 ### 📐Math evaluation
 python eval_math.py
