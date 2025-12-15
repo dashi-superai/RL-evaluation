@@ -159,7 +159,7 @@ class Actor:
 async def main():
     actor = Actor()
     cnt = 0
-    id = 100
+    id = 0
     for i in range(id, id + 1000, 5):
         result = await actor.evaluate(task_id = i)
         print(f"task id : {i} result: {result['score']}")
