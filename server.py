@@ -28,9 +28,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+import argparse
+import subprocess
+def download_hf_model(hf_url: str, local_dir: str):
+    """
+    Download a Hugging Face model using the hf CLI.
 
+    Args:
+        hf_url (str): Hugging Face model URL or repo ID (e.g., "AIdashi/dashi-2-1").
+        local_dir (str): Local directory to save the model.
+    """
+    command = ["hf", "download", hf_url, "--local-dir", local_dir]
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode == 0:
+        print(f"Model downloaded successfully to {local_dir}.")
+    else:
+        print("Error downloading model:")
+        print(result.stderr)
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Run LLM Inference API server")
+parser.add_argument("--hug_url", type=str, default="AIdashi/dashi-2-1", help="Path or name of the model")
+parser.add_argument("--local_dir", type=str, default="./model", help="Path or name of the model")
+args = parser.parse_args()
+
+
+HUG_URL = args.hug_url
+MODEL_NAME = args.local_dir
+download_hf_model(HUG_URL, MODEL_NAME)
 # Configuration
-MODEL_NAME = "./models1"  # Change to your model
+# MODEL_NAME = "./model"  # Change to your model
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Global variables
