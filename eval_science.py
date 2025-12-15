@@ -1,5 +1,6 @@
 from datasets import load_dataset
 from math_verify import parse, verify
+INSTRUCTION_PROMPT = "Solve the following problem. Make sure to put the answer (and only answer) inside \\boxed{}."
 
 async def llm_chat(prompt, temperature):
         """Call LLM API with specified API key and optional seed"""
@@ -21,7 +22,7 @@ async def llm_chat(prompt, temperature):
 
         params = {
             "prompt": prompt,
-            "max_length": 30000,
+            "max_length": 3000,
             "temperature": temperature,
             "messages": [
                 {"role": "user", "content": prompt}
@@ -37,20 +38,22 @@ async def llm_chat(prompt, temperature):
 
 
 async def math_main():
-    datasets = load_dataset("PrimeIntellect/INTELLECT-3-RL", "math")['train']
+    datasets = load_dataset("PrimeIntellect/INTELLECT-3-RL", "science")['train']
     print(len(datasets))
 
     import time
     import random
     random.seed(int(time.time()))
-
-    for index in range(50):
-        rand = random.randint(0, len(datasets))
-        print(f"Processing data index : {rand}")
+    idx = 10000
+    cnt = 0
+    
+    for index in range(idx, idx + 1000, 5):
+        # rand = random.randint(0, len(datasets))
+        print(f"Processing data index : {index}")
         
-        data = datasets[rand]
+        data = datasets[index]
 
-        prompt = data['question']
+        prompt =INSTRUCTION_PROMPT + data['question']
 
         # print('+' * 60)
         # print(prompt)
@@ -88,7 +91,8 @@ async def math_main():
         print('|' * 60)
         print(f"Score: {score}")
         print('=' * 60)
-        
+        if score:
+            cnt += 1
         # content = "1007"
 
         with open(f'./log/output-{index}.txt', 'w') as f:
@@ -100,7 +104,7 @@ async def math_main():
             res += f"Score : {score}"
 
             f.write(res)
-
+    print(f"correct num: {cnt}/{len(range(idx, idx + 1000, 5))}")
 
 if __name__ == "__main__":
     import asyncio

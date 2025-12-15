@@ -8,4 +8,3 @@ uv pip install fastapi uvicorn transformers torch accelerate math_verify dataset
 cd affinetes
 uv pip install -e .
 cd ..
-
