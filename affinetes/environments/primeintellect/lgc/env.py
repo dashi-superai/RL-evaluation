@@ -7,6 +7,7 @@ import httpx
 # import openai
 import sys
 import random
+import argparse
 
 # Add /app to path to import local modules
 if '/app' not in sys.path:
@@ -151,15 +152,21 @@ class Actor:
     
     
 async def main():
+    parser = argparse.ArgumentParser(description="Run LLM Inference API server")
+    parser.add_argument("--start_idx", type=int, default=8000, help="data index")
+    parser.add_argument("--idx_step", type=int, default=1, help="index step")
+    args = parser.parse_args()
+    idx = args.start_idx
+    idx_step = args.idx_step
     actor = Actor()
     cnt = 0
-    id = 8000
-    for i in range(id, id + 1000, 5):
+    id = idx
+    for i in range(id, id + 1000, idx_step):
         result = await actor.evaluate(task_id = i)
         print(f"task id : {i} result: {result['score']}")
         if result['score']:
             cnt += 1
-    print(f"correct num: {cnt}/{len(range(id, id + 1000, 5))}")
+    print(f"correct num: {cnt}/{len(range(id, id + 1000, idx_step))}")
             
 if __name__  == '__main__':
     import asyncio
