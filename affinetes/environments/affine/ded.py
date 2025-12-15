@@ -7,6 +7,7 @@ from typing import Any, Dict
 from executor import ProgramExecutor
 from dataset import HFDataset
 from models import Challenge
+import argparse
 
 # Logger
 logger = logging.getLogger("affine")
@@ -47,7 +48,40 @@ class DEDTask:
         """
         self._executor = ProgramExecutor()
         self._dataset = dataset if dataset is not None else HFDataset(dataset_name=dataset_name, split="train", preload=False)
+    async def _llm_chat(self, prompt, temperature):
+        """Call LLM API with specified API key and optional seed"""
+        # Unset SSL_CERT_FILE to avoid certificate path issues in container
+        # Let httpx/certifi use default certificate bundle
+        # Prepare API call parameters
 
+        import requests
+
+        # Generate text
+        # response = requests.post(
+        #     "http://localhost:5000/generate",
+        #     json={
+        #         "prompt": prompt,
+        #         "max_length": 100000,
+        #         "temperature": temperature
+        #     }
+        # )
+
+        params = {
+            "prompt": prompt,
+            "max_length": 1000,
+            "temperature": temperature,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+        
+        response = requests.post(
+            "http://localhost:5001/chat",
+            json=params
+        )
+
+        return response
+    
     async def generate(self, task_id: int = None) -> Challenge:
         """Generate a coding challenge from HuggingFace dataset
         
@@ -186,3 +220,31 @@ class DEDTask:
         logger.debug(f"DED evaluation completed with score: {score} ({passed}/{total})")
         
         return score
+    
+    
+async def main():
+    parser = argparse.ArgumentParser(description="Run LLM Inference API server")
+    parser.add_argument("--start_idx", type=int, default=20000, help="data index")
+    parser.add_argument("--idx_step", type=int, default=1, help="index step")
+    args = parser.parse_args()
+    idx = args.start_idx
+    idx_step = args.idx_step
+    
+    
+    actor = DEDTask()
+    cnt = 0
+    id = idx
+    for i in range(id, id + 3000, idx_step):
+        challenge = await actor.generate(task_id = i)
+        resp = await actor._llm_chat(challenge.prompt, 0.7)
+        data = resp.json()
+        print(data["response"])
+        result = await actor.evaluate(data['response'], challenge=challenge)
+        print(f"task id : {i} result: {result}")
+        if result:
+            cnt += 1
+    print(f"correct num: {cnt}/{len(range(id, id + 3000, idx_step))}")
+            
+if __name__  == '__main__':
+    import asyncio
+    asyncio.run(main())
