@@ -165,7 +165,7 @@ async def main():
         print(f"task id : {i} result: {result['score']}")
         if result['score']:
             cnt += 1
-    print(f"correct num: {cnt}")
+    print(f"correct num: {cnt}/{len(range(id, id + 1000, 5))}")
             
 if __name__  == '__main__':
     import asyncio

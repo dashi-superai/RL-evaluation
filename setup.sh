@@ -8,4 +8,4 @@ pip install uv
 uv pip install fastapi uvicorn transformers torch accelerate math_verify datasets
 cd affinetes
 uv pip install -e .
-cd ..
+uv pip install openai
