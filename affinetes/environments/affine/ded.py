@@ -68,7 +68,7 @@ class DEDTask:
 
         params = {
             "prompt": prompt,
-            "max_length": 1000,
+            "max_length": 3000,
             "temperature": temperature,
             "messages": [
                 {"role": "user", "content": prompt}
