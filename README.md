@@ -1,4 +1,4 @@
-### setup package.
+### setup
 chmod +x setup.sh
 
 ./setup.sh
