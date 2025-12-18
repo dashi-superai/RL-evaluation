@@ -151,7 +151,7 @@ class Actor:
             seed = random.randint(0, 2**32 - 1)
 
         # Allow per-call api_key override
-        current_api_key = api_key or self.api_key
+        current_api_key = "111" or self.api_key
         
         start = time.time()
         
