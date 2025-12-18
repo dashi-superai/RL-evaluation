@@ -223,6 +223,7 @@ async def main():
     actor = Actor()
     cnt = 0
     id = idx
+    false_list = []
     for i in range(id, id + 1000, idx_step):
         result = await actor.evaluate(task_id = i)
         print(f"task id : {i} result: {result['score']}")
