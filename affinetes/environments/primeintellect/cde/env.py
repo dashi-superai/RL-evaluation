@@ -228,6 +228,10 @@ async def main():
         print(f"task id : {i} result: {result['score']}")
         if result['score']:
             cnt += 1
+        else:
+            false_list.append(i)
+            with open("false_list.txt", "w") as f:
+                f.write(str(false_list))
     print(f"correct num: {cnt}/{len(range(id, id + 1000, idx_step))}")
             
 if __name__  == '__main__':
