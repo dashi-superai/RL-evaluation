@@ -125,7 +125,7 @@ class Actor:
     async def evaluate(
         self,
         model="deepseek-ai/DeepSeek-V3",
-        base_url="https://llm.chutes.ai/v1",
+        base_url="http://localhost:8000/v1",
         timeout=600,
         temperature=0.7,
         api_key: str = None,
