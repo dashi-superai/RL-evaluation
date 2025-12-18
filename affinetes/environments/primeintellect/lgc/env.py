@@ -30,58 +30,58 @@ class Actor:
         
         # Initialize logic task instance
         self.logic_task = LogicTask()
-        # async def _llm_chat(self, prompt, model, base_url, timeout, temperature, current_api_key, seed=None):
-        #     """Call LLM API with specified API key and optional seed (streaming mode)"""
-        #     # Unset SSL_CERT_FILE to avoid certificate path issues in container
-        #     # Let httpx/certifi use default certificate bundle
-        #     os.environ.pop('SSL_CERT_FILE', None)
-        #     os.environ.pop('REQUESTS_CA_BUNDLE', None)
-            
-        #     client = openai.AsyncOpenAI(
-        #         base_url=base_url.rstrip('/'),
-        #         api_key=current_api_key,
-        #         timeout=httpx.Timeout(timeout),
-        #         max_retries=0
-        #     )
+    # async def _llm_chat(self, prompt, model, base_url, timeout, temperature, current_api_key, seed=None):
+    #     """Call LLM API with specified API key and optional seed (streaming mode)"""
+    #     # Unset SSL_CERT_FILE to avoid certificate path issues in container
+    #     # Let httpx/certifi use default certificate bundle
+    #     os.environ.pop('SSL_CERT_FILE', None)
+    #     os.environ.pop('REQUESTS_CA_BUNDLE', None)
+        
+    #     client = openai.AsyncOpenAI(
+    #         base_url=base_url.rstrip('/'),
+    #         api_key=current_api_key,
+    #         timeout=httpx.Timeout(timeout),
+    #         max_retries=0
+    #     )
 
-        #     # Prepare API call parameters with streaming enabled
-        #     params = {
-        #         "model": model,
-        #         "messages": [{"role": "user", "content": prompt}],
-        #         "temperature": temperature,
-        #         "stream": True,
-        #         "stream_options": {"include_usage": True}
-        #     }
-            
-        #     # Add seed if provided
-        #     if seed is not None:
-        #         params["seed"] = seed
+    #     # Prepare API call parameters with streaming enabled
+    #     params = {
+    #         "model": model,
+    #         "messages": [{"role": "user", "content": prompt}],
+    #         "temperature": temperature,
+    #         "stream": True,
+    #         "stream_options": {"include_usage": True}
+    #     }
+        
+    #     # Add seed if provided
+    #     if seed is not None:
+    #         params["seed"] = seed
 
-        #     stream = await client.chat.completions.create(**params)
+    #     stream = await client.chat.completions.create(**params)
+        
+    #     # Collect streamed content and usage
+    #     content_parts = []
+    #     usage = None
+        
+    #     async for chunk in stream:
+    #         # Collect content chunks
+    #         if chunk.choices and chunk.choices[0].delta.content:
+    #             content_parts.append(chunk.choices[0].delta.content)
             
-        #     # Collect streamed content and usage
-        #     content_parts = []
-        #     usage = None
-            
-        #     async for chunk in stream:
-        #         # Collect content chunks
-        #         if chunk.choices and chunk.choices[0].delta.content:
-        #             content_parts.append(chunk.choices[0].delta.content)
-                
-        #         # Collect usage information from the final chunk
-        #         if chunk.usage:
-        #             usage = chunk.usage.model_dump()
-            
-        #     # Combine all content parts
-        #     if not content_parts:
-        #         raise ValueError("LLM API returned empty content stream")
-            
-        #     content = "".join(content_parts)
-        #     if not content:
-        #         raise ValueError("LLM API returned None content (possible content filtering or API error)")
-            
-        #     # Return both content and usage information
-        #     return content.strip(), usage
+    #         # Collect usage information from the final chunk
+    #         if chunk.usage:
+    #             usage = chunk.usage.model_dump()
+        
+    #     # Combine all content parts
+    #     if not content_parts:
+    #         raise ValueError("LLM API returned empty content stream")
+        
+    #     content = "".join(content_parts)
+    #     if not content:
+    #         raise ValueError("LLM API returned None content (possible content filtering or API error)")
+        
+    #     # Return both content and usage information
+    #     return content.strip(), usage
 
     
     async def _llm_chat(self, prompt, temperature):
@@ -147,7 +147,7 @@ class Actor:
             seed = random.randint(0, 2**32 - 1)
 
         # Allow per-call api_key override
-        current_api_key = api_key or self.api_key
+        current_api_key = "111" or self.api_key
         
         start = time.time()
         
@@ -157,6 +157,7 @@ class Actor:
         # Call LLM
         try:
             resp = await self._llm_chat(challenge.prompt, temperature)
+            resp, usage = await self._llm_chat(challenge.prompt, model, base_url, timeout, temperature, current_api_key, seed)
             error = None
         except Exception as e:
             import traceback
