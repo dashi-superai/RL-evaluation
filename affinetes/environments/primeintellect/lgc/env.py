@@ -4,7 +4,7 @@ import os
 import time
 import gc
 import httpx
-# import openai
+import openai
 import sys
 import random
 import argparse
@@ -30,93 +30,94 @@ class Actor:
         
         # Initialize logic task instance
         self.logic_task = LogicTask()
-    # async def _llm_chat(self, prompt, model, base_url, timeout, temperature, current_api_key, seed=None):
-    #     """Call LLM API with specified API key and optional seed (streaming mode)"""
-    #     # Unset SSL_CERT_FILE to avoid certificate path issues in container
-    #     # Let httpx/certifi use default certificate bundle
-    #     os.environ.pop('SSL_CERT_FILE', None)
-    #     os.environ.pop('REQUESTS_CA_BUNDLE', None)
         
-    #     client = openai.AsyncOpenAI(
-    #         base_url=base_url.rstrip('/'),
-    #         api_key=current_api_key,
-    #         timeout=httpx.Timeout(timeout),
-    #         max_retries=0
-    #     )
-
-    #     # Prepare API call parameters with streaming enabled
-    #     params = {
-    #         "model": model,
-    #         "messages": [{"role": "user", "content": prompt}],
-    #         "temperature": temperature,
-    #         "stream": True,
-    #         "stream_options": {"include_usage": True}
-    #     }
-        
-    #     # Add seed if provided
-    #     if seed is not None:
-    #         params["seed"] = seed
-
-    #     stream = await client.chat.completions.create(**params)
-        
-    #     # Collect streamed content and usage
-    #     content_parts = []
-    #     usage = None
-        
-    #     async for chunk in stream:
-    #         # Collect content chunks
-    #         if chunk.choices and chunk.choices[0].delta.content:
-    #             content_parts.append(chunk.choices[0].delta.content)
-            
-    #         # Collect usage information from the final chunk
-    #         if chunk.usage:
-    #             usage = chunk.usage.model_dump()
-        
-    #     # Combine all content parts
-    #     if not content_parts:
-    #         raise ValueError("LLM API returned empty content stream")
-        
-    #     content = "".join(content_parts)
-    #     if not content:
-    #         raise ValueError("LLM API returned None content (possible content filtering or API error)")
-        
-    #     # Return both content and usage information
-    #     return content.strip(), usage
-
-    
-    async def _llm_chat(self, prompt, temperature):
-        """Call LLM API with specified API key and optional seed"""
+    async def _llm_chat(self, prompt, model, base_url, timeout, temperature, current_api_key, seed=None):
+        """Call LLM API with specified API key and optional seed (streaming mode)"""
         # Unset SSL_CERT_FILE to avoid certificate path issues in container
         # Let httpx/certifi use default certificate bundle
-        # Prepare API call parameters
-
-        import requests
-
-        # Generate text
-        # response = requests.post(
-        #     "http://localhost:5000/generate",
-        #     json={
-        #         "prompt": prompt,
-        #         "max_length": 100000,
-        #         "temperature": temperature
-        #     }
-        # )
-
-        params = {
-            "prompt": prompt,
-            "max_length": 1000,
-            "temperature": temperature,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        }
+        os.environ.pop('SSL_CERT_FILE', None)
+        os.environ.pop('REQUESTS_CA_BUNDLE', None)
         
-        response = requests.post(
-            "http://localhost:5001/chat",
-            json=params
+        client = openai.AsyncOpenAI(
+            base_url=base_url.rstrip('/'),
+            api_key=current_api_key,
+            timeout=httpx.Timeout(timeout),
+            max_retries=0
         )
 
-        return response
+        # Prepare API call parameters with streaming enabled
+        params = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+            "stream": True,
+            "stream_options": {"include_usage": True}
+        }
+        
+        # Add seed if provided
+        if seed is not None:
+            params["seed"] = seed
+
+        stream = await client.chat.completions.create(**params)
+        
+        # Collect streamed content and usage
+        content_parts = []
+        usage = None
+        
+        async for chunk in stream:
+            # Collect content chunks
+            if chunk.choices and chunk.choices[0].delta.content:
+                content_parts.append(chunk.choices[0].delta.content)
+            
+            # Collect usage information from the final chunk
+            if chunk.usage:
+                usage = chunk.usage.model_dump()
+        
+        # Combine all content parts
+        if not content_parts:
+            raise ValueError("LLM API returned empty content stream")
+        
+        content = "".join(content_parts)
+        if not content:
+            raise ValueError("LLM API returned None content (possible content filtering or API error)")
+        
+        # Return both content and usage information
+        return content.strip(), usage
+
+    
+    # async def _llm_chat(self, prompt, temperature):
+    #     """Call LLM API with specified API key and optional seed"""
+    #     # Unset SSL_CERT_FILE to avoid certificate path issues in container
+    #     # Let httpx/certifi use default certificate bundle
+    #     # Prepare API call parameters
+
+    #     import requests
+
+    #     # Generate text
+    #     # response = requests.post(
+    #     #     "http://localhost:5000/generate",
+    #     #     json={
+    #     #         "prompt": prompt,
+    #     #         "max_length": 100000,
+    #     #         "temperature": temperature
+    #     #     }
+    #     # )
+
+    #     params = {
+    #         "prompt": prompt,
+    #         "max_length": 1000,
+    #         "temperature": temperature,
+    #         "messages": [
+    #             {"role": "user", "content": prompt}
+    #         ]
+    #     }
+        
+    #     response = requests.post(
+    #         "http://localhost:5001/chat",
+    #         json=params
+    #     )
+
+    #     return response
     
     async def evaluate(
         self,
@@ -156,21 +157,22 @@ class Actor:
         
         # Call LLM
         try:
-            resp = await self._llm_chat(challenge.prompt, temperature)
+            # resp = await self._llm_chat(challenge.prompt, temperature)
             resp, usage = await self._llm_chat(challenge.prompt, model, base_url, timeout, temperature, current_api_key, seed)
+            print(resp)
             error = None
         except Exception as e:
             import traceback
             resp = None
             error = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         
-        data = resp.json()
-        print(data["response"])
+        # data = resp.json()
+        # print(data["response"])
         # Evaluate
         score = 0.0
         if resp:
             try:
-                score = await self.logic_task.evaluate(data["response"], challenge)
+                score = await self.logic_task.evaluate(resp, challenge)
             except Exception as e:
                 import traceback
                 error = f"Evaluation error: {type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
@@ -206,21 +208,31 @@ class Actor:
     
     
 async def main():
+    #import args from env
     parser = argparse.ArgumentParser(description="Run LLM Inference API server")
-    parser.add_argument("--start_idx", type=int, default=8000, help="data index")
+    parser.add_argument("--start_idx", type=int, default=0, help="data index")
     parser.add_argument("--idx_step", type=int, default=1, help="index step")
+    parser.add_argument("--hug_url", type=str, default="AIdashi/dashi-2-1", help="huggingface repo")
     args = parser.parse_args()
     idx = args.start_idx
     idx_step = args.idx_step
+    hug_url = args.hug_url
+    
+    #main part
     actor = Actor()
     cnt = 0
     id = idx
-    for i in range(id, id + 1000, idx_step):
-        result = await actor.evaluate(task_id = i)
+    false_list = []
+    for i in range(id, id + 100, idx_step):
+        result = await actor.evaluate(model = hug_url, task_id = i)
         print(f"task id : {i} result: {result['score']}")
         if result['score']:
             cnt += 1
-    print(f"correct num: {cnt}/{len(range(id, id + 1000, idx_step))}")
+        else:
+            false_list.append(i)
+            with open("false_list.txt", "w") as f:
+                f.write(str(false_list))
+    print(f"correct num: {cnt}/{len(range(id, id + 100, idx_step))}")
             
 if __name__  == '__main__':
     import asyncio
