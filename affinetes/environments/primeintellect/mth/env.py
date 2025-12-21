@@ -7,6 +7,7 @@ import httpx
 import openai
 import sys
 import random
+import argparse
 
 # Add /app to path to import local modules
 if '/app' not in sys.path:
@@ -89,15 +90,15 @@ class Actor:
     
     async def evaluate(
         self,
-        model="deepseek-ai/DeepSeek-V3",
-        base_url="https://llm.chutes.ai/v1",
+        model="learydenis/test-5",
+        base_url="http://localhost:8000/v1",
         timeout=600,
         temperature=0.7,
         api_key: str = None,
         seed: int = None,
         task_id: int = None,
-        judge_model: str = "deepseek-ai/DeepSeek-V3.2-Speciale",
-        judge_base_url: str = "https://llm.chutes.ai/v1",
+        judge_model: str = "learydenis/test-5",
+        judge_base_url: str = "http://localhost:8000/v1",
         judge_api_key: str = None
     ):
         """
@@ -122,7 +123,7 @@ class Actor:
             seed = random.randint(0, 2**32 - 1)
 
         # Allow per-call api_key override
-        current_api_key = api_key or self.api_key
+        current_api_key = "111" or self.api_key
 
         if judge_api_key is None:
             judge_api_key = self.api_key
@@ -136,6 +137,7 @@ class Actor:
         usage = None
         try:
             resp, usage = await self._llm_chat(challenge.prompt, model, base_url, timeout, temperature, current_api_key, seed)
+            print(resp)
             error = None
         except Exception as e:
             import traceback
@@ -181,3 +183,33 @@ class Actor:
         gc.collect()
 
         return result
+async def main():
+    #import args from env
+    parser = argparse.ArgumentParser(description="Run LLM Inference API server")
+    parser.add_argument("--start_idx", type=int, default=0, help="data index")
+    parser.add_argument("--idx_step", type=int, default=1, help="index step")
+    parser.add_argument("--hug_url", type=str, default="AIdashi/dashi-2-1", help="huggingface repo")
+    args = parser.parse_args()
+    idx = args.start_idx
+    idx_step = args.idx_step
+    hug_url = args.hug_url
+    
+    #main part
+    actor = Actor()
+    cnt = 0
+    id = idx
+    false_list = []
+    for i in range(id, id + 1000, idx_step):
+        result = await actor.evaluate(model = hug_url, task_id = i)
+        print(f"task id : {i} result: {result['score']}")
+        if result['score']:
+            cnt += 1
+        else:
+            false_list.append(i)
+            with open("false_list.txt", "w") as f:
+                f.write(str(false_list))
+    print(f"correct num: {cnt}/{len(range(id, id + 1000, idx_step))}")
+            
+if __name__  == '__main__':
+    import asyncio
+    asyncio.run(main())
