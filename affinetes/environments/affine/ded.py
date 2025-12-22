@@ -8,7 +8,9 @@ from executor import ProgramExecutor
 from dataset import HFDataset
 from models import Challenge
 import argparse
-
+import openai
+import os
+import httpx
 # Logger
 logger = logging.getLogger("affine")
 
@@ -48,39 +50,92 @@ class DEDTask:
         """
         self._executor = ProgramExecutor()
         self._dataset = dataset if dataset is not None else HFDataset(dataset_name=dataset_name, split="train", preload=False)
-    async def _llm_chat(self, prompt, temperature):
-        """Call LLM API with specified API key and optional seed"""
+        
+    async def _llm_chat(self, prompt, model, base_url, timeout, temperature, current_api_key, seed=None):
+        """Call LLM API with specified API key and optional seed (streaming mode)"""
         # Unset SSL_CERT_FILE to avoid certificate path issues in container
         # Let httpx/certifi use default certificate bundle
-        # Prepare API call parameters
-
-        import requests
-
-        # Generate text
-        # response = requests.post(
-        #     "http://localhost:5000/generate",
-        #     json={
-        #         "prompt": prompt,
-        #         "max_length": 100000,
-        #         "temperature": temperature
-        #     }
-        # )
-
-        params = {
-            "prompt": prompt,
-            "max_length": 3000,
-            "temperature": temperature,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        }
+        os.environ.pop('SSL_CERT_FILE', None)
+        os.environ.pop('REQUESTS_CA_BUNDLE', None)
         
-        response = requests.post(
-            "http://localhost:5001/chat",
-            json=params
+        client = openai.AsyncOpenAI(
+            base_url=base_url.rstrip('/'),
+            api_key=current_api_key,
+            timeout=httpx.Timeout(timeout),
+            max_retries=0
         )
 
-        return response
+        # Prepare API call parameters with streaming enabled
+        params = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+            "stream": True,
+            "stream_options": {"include_usage": True}
+        }
+        
+        # Add seed if provided
+        if seed is not None:
+            params["seed"] = seed
+
+        stream = await client.chat.completions.create(**params)
+        
+        # Collect streamed content and usage
+        content_parts = []
+        usage = None
+        
+        async for chunk in stream:
+            # Collect content chunks
+            if chunk.choices and chunk.choices[0].delta.content:
+                content_parts.append(chunk.choices[0].delta.content)
+            
+            # Collect usage information from the final chunk
+            if chunk.usage:
+                usage = chunk.usage.model_dump()
+        
+        # Combine all content parts
+        if not content_parts:
+            raise ValueError("LLM API returned empty content stream")
+        
+        content = "".join(content_parts)
+        if not content:
+            raise ValueError("LLM API returned None content (possible content filtering or API error)")
+        
+        # Return both content and usage information
+        return content.strip(), usage
+    # async def _llm_chat(self, prompt, temperature):
+    #     """Call LLM API with specified API key and optional seed"""
+    #     # Unset SSL_CERT_FILE to avoid certificate path issues in container
+    #     # Let httpx/certifi use default certificate bundle
+    #     # Prepare API call parameters
+
+    #     import requests
+
+    #     # Generate text
+    #     # response = requests.post(
+    #     #     "http://localhost:5000/generate",
+    #     #     json={
+    #     #         "prompt": prompt,
+    #     #         "max_length": 100000,
+    #     #         "temperature": temperature
+    #     #     }
+    #     # )
+
+    #     params = {
+    #         "prompt": prompt,
+    #         "max_length": 3000,
+    #         "temperature": temperature,
+    #         "messages": [
+    #             {"role": "user", "content": prompt}
+    #         ]
+    #     }
+        
+    #     response = requests.post(
+    #         "http://localhost:5001/chat",
+    #         json=params
+    #     )
+
+    #     return response
     
     async def generate(self, task_id: int = None) -> Challenge:
         """Generate a coding challenge from HuggingFace dataset
@@ -218,7 +273,6 @@ class DEDTask:
 
         score = 1.0 if passed == total else 0.0
         logger.debug(f"DED evaluation completed with score: {score} ({passed}/{total})")
-        
         return score
     
     
@@ -234,16 +288,26 @@ async def main():
     actor = DEDTask()
     cnt = 0
     id = idx
-    for i in range(id, id + 3000, idx_step):
+    false_list = []
+    for i in range(id, id + 23295, 1):
         challenge = await actor.generate(task_id = i)
-        resp = await actor._llm_chat(challenge.prompt, 0.7)
-        data = resp.json()
-        print(data["response"])
-        result = await actor.evaluate(data['response'], challenge=challenge)
+        resp = await actor._llm_chat(challenge.prompt, model="BKM1804/affine-he-14", base_url="http://localhost:8000/v1", timeout=600, temperature=0.7, current_api_key="111", seed=None)
+        print(resp)
+        # data = resp.json()
+        # print(data["response"])
+        result = await actor.evaluate(resp[0], challenge=challenge)
         print(f"task id : {i} result: {result}")
         if result:
             cnt += 1
-    print(f"correct num: {cnt}/{len(range(id, id + 3000, idx_step))}")
+            import json
+            save_data = {'question': challenge.prompt, 'answer':resp[0]}
+            with open(f"ded_dataset/{i}.json", "w") as f:
+                json.dump(save_data, f)
+        else:
+            false_list.append(i)
+            with open("ded_false_list.txt", "w") as f:
+                f.write(str(false_list))
+    print(f"correct num: {cnt}/{len(range(id, id + 23295, 1))}")
             
 if __name__  == '__main__':
     import asyncio
