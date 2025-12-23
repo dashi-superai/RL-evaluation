@@ -280,10 +280,12 @@ async def main():
     parser = argparse.ArgumentParser(description="Run LLM Inference API server")
     parser.add_argument("--start_idx", type=int, default=20000, help="data index")
     parser.add_argument("--idx_step", type=int, default=1, help="index step")
+    parser.add_argument("--hug_url", type=str, default="AIdashi/dashi-2-1", help="huggingface repo")
     args = parser.parse_args()
     idx = args.start_idx
     idx_step = args.idx_step
-    
+    hug_url = args.hug_url
+
     
     actor = DEDTask()
     cnt = 0
@@ -291,7 +293,7 @@ async def main():
     false_list = []
     for i in range(id, id + 23295, 1):
         challenge = await actor.generate(task_id = i)
-        resp = await actor._llm_chat(challenge.prompt, model="BKM1804/affine-he-14", base_url="http://localhost:8000/v1", timeout=600, temperature=0.7, current_api_key="111", seed=None)
+        resp = await actor._llm_chat(challenge.prompt, model=hug_url, base_url="http://localhost:8000/v1", timeout=600, temperature=0.7, current_api_key="111", seed=None)
         print(resp)
         # data = resp.json()
         # print(data["response"])
