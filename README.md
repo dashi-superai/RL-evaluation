@@ -4,6 +4,7 @@ chmod +x setup.sh
 ./setup.sh
 
 source .venv/bin/activate
+
 ### 📡Run LLM Server
 ➖Local server
 
