@@ -14,6 +14,8 @@ python server.py --hug_url Sota26/Affine_M016 --local_dir model
 
 vllm serve model_name(huggingface_url) --max-model-len 10000 --gpu-memory-utilization 0.9 --host 0.0.0.0
 
+python -m sglang.launch_server --host 0.0.0.0 --port 8000 --model-path <> --chat-template ""
+
 ### 📐Math evaluation
 ➖Local server
 
